@@ -1,0 +1,114 @@
+name: Deploy Splunk
+run-name: Deploy Splunk
+on: 
+  workflow_dispatch:
+    inputs:
+      SAVE_INFRASTRUCTURE_STATE:
+        description: 'Save infrastructure. Choose ''Save'' if you want to save the infrastructude (terraform.tfstate) to the GitHub repository. Choose ''Do not save'' if you do not want to save the infrastructure state to the GitHub repository.'
+        required: true
+        default: 'Save'
+        type: choice
+        options:
+        - Save
+        - Do not save
+
+      ONLY_INFRASTRUCTURE:
+        description: 'Choose ''Yes'' if you want to deploy only infrastructure without VMs and LB. Choose ''No'' if you want to deploy everything.'
+        required: true
+        default: 'Yes'
+        type: choice
+        options:
+        - 'Yes'
+        - 'No'
+
+      DEPLOYMENT_ENVIORNMENT:
+        description: 'Deployment Env of Infra. Expected values are ''development'', ''test'', ''production'', ''sandpit'''
+        default: 'dev'
+        type: choice
+        options:
+        - 'development'
+        - 'test'
+        - 'production'
+        - 'sandpit'
+
+      DEPLOYMENT_Architectures:
+        description: 'Deployment Env of Architectures. Expected values are ''Single'', ''Distributed'', ''Clustered'',''Multi-site'''
+        default : 'Clustered'
+        type: choice
+        options:
+          - Clustered
+          - Single
+          - Distributed
+          - Multi-site
+        
+
+      JSON_CONFIGURATION_STRING:
+        description: 'Input field for JSON string. If empty default config will be used. For more information see README.md.'
+        default: ''
+        type: string
+
+      
+      
+jobs:
+  Deploy-Splunk:
+    runs-on: ubuntu-latest
+    # needs: set-up-environment
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: 'true'
+
+      - name: Set up environment
+        uses: ./.github/actions/setup_environment
+        with:
+          JSON_STRING: ${{ inputs.JSON_CONFIGURATION_STRING }}
+
+      - name: Terraform commands
+        uses: ./.github/actions/terraform_commands
+        with:
+          DRY_RUN: ${{ inputs.ONLY_INFRASTRUCTURE }}
+          SAVE_INFRASTRUCTURE_STATE: ${{ inputs.SAVE_INFRASTRUCTURE_STATE }}
+          DEPLOYMENT_ENVIORNMENT: ${{ inputs.DEPLOYMENT_ENVIORNMENT }}
+
+      - name: Generate Splunk password
+        shell: bash
+        working-directory: ${{ github.workspace }}/scripts/generate_password
+        run: |
+          python generate_password.py --length 32 --file 'splunk_admin_password.txt'
+          python generate_password.py --length 32 --file 'splunk_cluster_password.txt'
+          echo "SPLUNK_ADMIN_PASSWORD=$(cat splunk_admin_password.txt)" >> $GITHUB_ENV
+          echo "SPLUNK_CLUSTER_PASSWORD=$(cat splunk_cluster_password.txt)" >> $GITHUB_ENV
+      
+      - name: Upload password as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: splunk-passwords
+          path: |
+            ${{ github.workspace }}/scripts/generate_password/splunk_admin_password.txt
+            ${{ github.workspace }}/scripts/generate_password/splunk_cluster_password.txt
+          retention-days: 7
+
+      - name: Apply ansible commands
+        uses: ./.github/actions/ansible_commands
+        if: ${{ inputs.ONLY_INFRASTRUCTURE == 'No' }}
+        env:
+          LICENSE_E24: ${{ secrets.LICENSE_E24 }}
+          LICENSE_I24: ${{ secrets.LICENSE_I24 }}
+        with: 
+          DEPLOYMENT_ENVIORNMENT: ${{ inputs.DEPLOYMENT_ENVIORNMENT }}
+          
+      
+      - name: Summary
+        working-directory: ${{ github.workspace }}/terraform
+        run: |
+          echo "Splunk user: admin"
+          echo "Splunk UI password: ${{ env.SPLUNK_ADMIN_PASSWORD }}"
+          echo "Splunk cluster password: ${{ env.SPLUNK_CLUSTER_PASSWORD }}"
+          echo "Remember to change the password after the first login."
+          echo "Splunk URL: http://$(terraform output -state=${{ github.workspace }}/ansible/terraform.tfstate alb_dns):8000"
+          
+
+          

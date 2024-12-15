@@ -1,0 +1,167 @@
+name: 'Setup worker action'
+description: 'A GitHub Action that takes JSON string as an input and sets up environment from given configuration'
+inputs:
+  JSON_STRING:
+    description: 'provide valid JSON string structure with configuration options for workflow and infrastructure deployment. For more information see README.md.'
+    required: true
+    default: ""
+  
+  DEPLOYMENT_ENVIORNMENT:
+    description: 'Deployment Env of Infra. Expected values are ''dev'', ''test'', ''prod'''
+    default: 'development'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'  
+    
+    - name: Install Python dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install boto3 pyyaml
+
+    - name: Install wget dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install wget
+
+    - name: Save input json to config file
+      working-directory: ${{ github.workspace }}/scripts/json_configurations
+      shell: bash
+      run: |
+        echo -n '${{ inputs.JSON_STRING }}' > config.json        
+        cat config.json
+        if [ ! -s config.json ]; then
+          echo "Provided JSON string is empty, using default_splunk_configuration.json"
+          cat default_splunk_configuration.json > config.json
+        fi
+
+    - name: Get GitHub role ARN from input json
+      working-directory: ${{ github.workspace }}/scripts/json_configurations
+      shell: bash
+      run: |
+        region=$(jq -r '.general_parameters.aws_region' config.json)
+        github_role_arn=$(jq -r '.workflow_parameters.github_role_arn' config.json)
+        account_id=$(jq -r '.general_parameters.account_id' config.json)
+        echo "The AWS region is: $region"
+        echo "AWS_REGION=$region" >> $GITHUB_ENV
+        echo "The GitHub role ARN is: $github_role_arn"
+        echo "AWS_GITHUB_ROLE_ARN=$github_role_arn" >> $GITHUB_ENV
+        echo "AWS_ACCOUNT_ID=$account_id" >> $GITHUB_ENV
+        echo "The AWS account id is : $account_id"
+
+        
+              
+    - name: Configure aws session
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ env.AWS_GITHUB_ROLE_ARN }}
+        role-session-name: GitHubActionSession
+        aws-region: ${{ env.AWS_REGION }}
+        role-duration-seconds: 9000
+
+
+    - name: Check identity for AWS
+      shell: bash
+      run: aws sts get-caller-identity
+
+    - name: Pre Validation of terraform state elements and application components
+      working-directory: ${{ github.workspace }}/scripts/create_architecture
+      shell: bash
+      run: python3 precheck.py
+
+    - name: s3 Validation for binary and configuration bucket
+      working-directory: ${{ github.workspace }}/scripts/create_architecture
+      shell: bash
+      run: python3 initial_prechecks.py
+
+    - name: Validation for network elements
+      working-directory: ${{ github.workspace }}/scripts/create_architecture
+      shell: bash
+      run: python3 creating_uploading_s3.py
+
+    - name: creating the terraform tfvars file - stage 1
+      working-directory: ${{ github.workspace }}/scripts/create_architecture
+      shell: bash
+      run: python3 create_json_tfvars.py
+
+    - uses: hashicorp/setup-terraform@v2
+
+    - name: Generate the backend config file for terraform network tier 
+      working-directory: ${{ github.workspace }}/terraform_net
+      env:
+        region: ${{ env.AWS_REGION }}
+        account_id: ${{ env.AWS_ACCOUNT_ID }}
+      shell: bash
+      run: |
+        cat net-state.conf | sed -e "s@ACCTNUM@${account_id}@g" -e "s@REGION@${region}@g" > net-state-${account_id}-${region}.conf
+        cat net-state-${account_id}-${region}.conf
+        
+
+    - name: Terraform init, validate and plan for network tier 
+      working-directory: ${{ github.workspace }}/terraform_net
+      env:
+        region: ${{ env.AWS_REGION }}
+        account_id: ${{ env.AWS_ACCOUNT_ID }}
+      shell: bash
+      run: |
+        export TF_VAR_env=${{ inputs.DEPLOYMENT_ENVIORNMENT }}
+        terraform init -backend-config=net-state-${account_id}-${region}.conf
+        terraform validate
+        terraform plan -out='net_plan.out'
+
+    - name: Terraform apply - network tier
+      id: tf_net_apply
+      working-directory: ${{ github.workspace }}/terraform_net
+      shell: bash
+      run: |
+            terraform apply net_plan.out
+
+    - name: Terraform destroy if previous step failed
+      working-directory: ${{ github.workspace }}/terraform
+      if: failure() && steps.tf_net_apply.outcome != 'success'
+      shell: bash
+      run: |
+        terraform destroy -auto-approve
+    
+    - name: Upload terraform files for network tier as artifact 
+      if: always()
+      env:
+       region: ${{ env.AWS_REGION }}
+       account_id: ${{ env.AWS_ACCOUNT_ID }}
+      uses: actions/upload-artifact@v3
+      with:
+         name: terraform-network-files
+         path: |
+           ${{ github.workspace }}/terraform_net/net_plan.out
+           ${{ github.workspace }}/terraform_net/net-state-${{ env.AWS_ACCOUNT_ID }}-${{ env.AWS_REGION }}.conf
+         retention-days: 7
+
+        
+      
+    - name: updating the security group and subnets
+      working-directory: ${{ github.workspace }}/scripts/create_architecture
+      shell: bash
+      run: python3 update_json.py
+
+    - name: format and copy json variable file
+      working-directory: ${{ github.workspace }}/scripts/create_architecture
+      shell: bash
+      run: |
+          cat /tmp/terraform/output.json | jq -r > ${{ github.workspace }}/terraform/${{ inputs.DEPLOYMENT_ENVIORNMENT }}.tfvars.json
+          rm -rf /tmp/terraform/output.json
+
+
+    - name: Check tfvars file
+      working-directory: ${{ github.workspace }}/terraform
+      shell: bash
+      run: |
+        echo Current state of tfvars file:
+        echo 
+        cat ${{ github.workspace }}/terraform/${{ inputs.DEPLOYMENT_ENVIORNMENT }}.tfvars.json
+        echo

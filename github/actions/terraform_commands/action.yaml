@@ -1,0 +1,101 @@
+name: 'Run terraform commands'
+description: 'Run terraform commands to set up VMs and infrastructure parts'
+inputs:
+  SAVE_INFRASTRUCTURE_STATE:
+    description: 'provide "Save" if you want to save terraform.state and terraform.tfvars.json files as artifacts. Provide "Do not save" if you do not want to save them.'
+    required: true
+    default: "Save"
+  DRY_RUN:
+    description: 'provide "Yes" if you do not want to deploy infrastructure. Provide "No" if you want to deploy infrastructure.'
+    required: true
+    default: "Yes"
+  DEPLOYMENT_ENVIORNMENT:
+    description: 'Deployment Env of Infra. Expected values are ''dev'', ''test'', ''pro'''
+    default: 'development'
+
+runs:
+  using: 'composite'
+  steps:
+
+    - name: Generate the backend config file for terraform infra tier 
+      working-directory: ${{ github.workspace }}/terraform
+      env:
+        region: ${{ env.AWS_REGION }}
+        account_id: ${{ env.AWS_ACCOUNT_ID }}
+      shell: bash
+      run: |
+        cat infra-state.conf | sed -e "s@ACCTNUM@${account_id}@g" -e "s@REGION@${region}@g" > infra-state-${account_id}-${region}.conf
+        cat infra-state-${account_id}-${region}.conf
+
+    - name: Terraform init, validate and plan
+      working-directory: ${{ github.workspace }}/terraform
+      env:
+        region: ${{ env.AWS_REGION }}
+        account_id: ${{ env.AWS_ACCOUNT_ID }}
+      shell: bash
+      run: |
+        export TF_VAR_env=${{ inputs.DEPLOYMENT_ENVIORNMENT }}
+        terraform init -backend-config=infra-state-${account_id}-${region}.conf
+        terraform validate
+        terraform plan -out='plan.out' \
+                      -var-file="${{ inputs.DEPLOYMENT_ENVIORNMENT }}.tfvars.json"
+
+    
+    - name: Terraform apply
+      working-directory: ${{ github.workspace }}/terraform
+      if: ${{ inputs.DRY_RUN == 'No' }}
+      shell: bash
+      run: |
+        terraform apply plan.out
+
+    - name: Terraform destroy if previous step failed
+      working-directory: ${{ github.workspace }}/terraform
+      if: ${{ inputs.DRY_RUN == 'No' && failure() }}
+      shell: bash
+      run: |
+        terraform destroy -auto-approve \
+                          -var-file="${{ inputs.DEPLOYMENT_ENVIORNMENT }}.tfvars.json"
+
+    - name: Copy terraform state file to Ansible folder
+      working-directory: ${{ github.workspace }}/terraform
+      env:
+        region: ${{ env.AWS_REGION }}
+        account_id: ${{ env.AWS_ACCOUNT_ID }}
+      if: ${{ inputs.DRY_RUN == 'No' }}
+      shell: bash
+      run: |
+        aws s3 cp s3://terraform-state-${account_id}-${region}/infra/terraform.tfstate ../ansible/  > /dev/null 2>&1
+
+        if [ $? != 0 ]
+          then
+            echo "terraform.tfstate does not exist."
+          else
+            echo "Copied state file from S3 to ansible folder"
+            echo
+            ls -lrt ../ansible/terraform.tfstate
+            echo
+        fi
+        
+    - name: Terraform destroy if previous step failed
+      working-directory: ${{ github.workspace }}/terraform
+      if: ${{ inputs.DRY_RUN == 'No' && failure() }}
+      shell: bash
+      run: |
+        terraform destroy -auto-approve \
+                          -var-file="${{ inputs.DEPLOYMENT_ENVIORNMENT }}.tfvars.json"
+
+
+    - name: Upload terraform files as artefact
+      uses: actions/upload-artifact@v3
+      env:
+       region: ${{ env.AWS_REGION }}
+       account_id: ${{ env.AWS_ACCOUNT_ID }}
+      if: ${{ inputs.SAVE_INFRASTRUCTURE_STATE == 'Save' && always() }} #(success() || failure())
+      with:
+        name: terraform-infra-files
+        path: |
+          ${{ github.workspace }}/terraform/${{ inputs.DEPLOYMENT_ENVIORNMENT }}.tfvars.json
+          ${{ github.workspace }}/terraform/plan.out
+          ${{ github.workspace }}/terraform/infra-state-${{ env.AWS_ACCOUNT_ID }}-${{ env.AWS_REGION }}.conf
+        retention-days: 7
+        
