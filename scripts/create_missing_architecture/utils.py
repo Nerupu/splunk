@@ -1,0 +1,316 @@
+import logging
+import argparse
+import time
+import boto3
+import botocore
+from pprint import pprint
+
+DESIRED_STACK_STATUS = "CREATE_COMPLETE"
+MAX_RETRIES = 200
+RETRY_INTERVAL_SECONDS = 5
+DELETE_IF_FAILED = True
+
+
+"""
+Configures a logger with the specified log level and console output format.
+
+Args:
+loglevel (int): The integer value of the desired log level. Default is logging.INFO
+
+Returns:
+A logging.Logger object that is configured with the specified log level and console output format
+"""
+def configure_logger(loglevel = logging.INFO) -> logging.Logger:
+    logger = logging.getLogger(__name__)
+    logger.setLevel(loglevel)
+
+    formatter = logging.Formatter('%(levelname)s - %(message)s')
+
+    handler = logging.StreamHandler()
+    handler.setLevel(loglevel)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    return logger
+
+
+"""
+Converts a string log level to its corresponding integer value from the logging module.
+
+Args:
+loglevel (str): The string representation of the desired log level, one of: DEBUG, INFO, WARNING, ERROR, or CRITICAL
+
+Returns:
+The integer value of the corresponding log level from the logging module
+
+Raises:
+ValueError: If loglevel is not one of: DEBUG, INFO, WARNING, ERROR, or CRITICAL
+"""
+def parse_loglevel(loglevel:str):
+    loglevel = loglevel.upper()
+    if loglevel == "DEBUG":
+        loglevel = logging.DEBUG
+    elif loglevel == "INFO":
+        loglevel = logging.INFO
+    elif loglevel == "WARNING":
+        loglevel = logging.WARNING
+    elif loglevel == "ERROR":
+        loglevel = logging.ERROR
+    elif loglevel == "CRITICAL":
+        loglevel = logging.CRITICAL
+
+    return loglevel
+
+def configure_argparser():
+    parser = argparse.ArgumentParser()
+
+    general = parser.add_argument_group('General parameters of the script')
+    general.add_argument('--loglevel', type=str, default='INFO', help='Please enter the log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)')
+    general.add_argument('--keep-stack-if-failed', '-k', action='store_true', default=False, help='If this flag is set, the script will delete the stack if it fails to create')
+    general.add_argument('--name-prefix', type=str, default='EFA', help='An environment name that is prefixed to stacks names, after prefix \'-\' sign will be added')
+    general.add_argument('--outputs-location', type=str, default='./', help='The folder location where the outputs of the stacks will be saved')
+    general.add_argument('--provision-jumphost-sg-group', type=str, default='default', help='The security group that will be allowed to access the jumphost')
+
+    vpc_arguments = parser.add_argument_group('Vpc Configuration')
+    vpc_arguments.add_argument('--vpc-id', type=str, required=True, help='Please enter the VPC ID. Can be \'create\' to create a new VPC or vpc-id if you want to use an existing VPC')
+    vpc_arguments.add_argument('--vpc-cidr', type=str, default='10.192.0.0/16', help='Please enter the IP range (CIDR notation) for this VPC')
+    vpc_arguments.add_argument('--public-subnet-cidr', type=str, default='10.192.10.0/24', help='Please enter the IP range (CIDR notation) for the public subnet')
+    vpc_arguments.add_argument('--private-subnet-cidr-az1', type=str, default='10.192.20.0/24', help='Please enter the IP range (CIDR notation) for the private subnet for az1')
+    vpc_arguments.add_argument('--private-subnet-cidr-az2', type=str, default='10.192.30.0/24', help='Please enter the IP range (CIDR notation) for the private subnet for az1')
+    vpc_arguments.add_argument('--private-subnet-cidr-az3', type=str, default='10.192.40.0/24', help='Please enter the IP range (CIDR notation) for the private subnet for az1')
+
+    security_group_arguments = parser.add_argument_group('Security Group Configuration')
+    security_group_arguments.add_argument('--access-to-load-balancer-sg-id', type=str, default=None, help='Please enter the ID of an additional security group that will be allowed to acces load balancer')
+
+    ssm_arguments = parser.add_argument_group('SSM Configuration')
+    ssm_arguments.add_argument('--ssm-role-name', type=str, default='SSMRole', help='Please enter the name of the role')
+    ssm_arguments.add_argument('--ssm-profile-name', type=str, default='SSMInstanceProfile', help='Please enter the name of the instance profile')
+    ssm_arguments.add_argument('--ssm-policy-name', type=str, default='SSM Ansible Policy', help='Please enter the name of the policy')
+
+
+
+    args = parser.parse_args()
+
+    return args
+
+
+"""
+Checks if AWS is properly configured by attempting to get the caller identity using boto3 client for Security Token Service (STS).
+
+Returns:
+None
+
+Logs:
+- If AWS is properly configured:
+- User ID of the caller identity
+- AWS account ID of the caller identity
+- Amazon Resource Name (ARN) of the caller identity
+- "AWS is configured"
+- Empty string
+- If AWS is not properly configured:
+- "AWS is not configured"
+- Error message generated by the exception that occurred
+"""
+def check_if_aws_is_configured(l: logging.Logger = logging.getLogger(__name__)):
+    sts_client = boto3.client('sts')
+    try:
+        l.info("Checking if AWS is configured by requesting caller identity...")
+        ret = sts_client.get_caller_identity()
+        l.info(f"userId:     {ret['UserId']}")
+        l.info(f"accountId:  {ret['Account']}")
+        l.info(f"arn:        {ret['Arn']}")
+        l.info("AWS is configured")
+        l.info("")
+
+    except Exception as e:
+        l.error("AWS is not configured")
+        l.error(e)
+        exit(1)
+
+
+def get_stack_status(stack_name):
+    cloudformation_client = boto3.client('cloudformation')
+    try:
+        stack = cloudformation_client.describe_stacks(StackName=stack_name)['Stacks'][0]
+        stack_status = stack['StackStatus']
+        return stack_status
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == 'ValidationError':
+            response = cloudformation_client.list_stacks(
+                        StackStatusFilter=['DELETE_COMPLETE']
+                    )
+
+            deleted_stacks = [stack['StackName'] for stack in response['StackSummaries']]
+
+            if stack_name in deleted_stacks:
+                return "DELETE_COMPLETE"
+            else:
+                raise e
+        else:
+            raise e
+        
+def wait_until_stack_reaches_status(stack_name:str, desired_status:str = DESIRED_STACK_STATUS, l: logging.Logger = logging.getLogger(__name__)):
+    retry = 0
+
+    stack_status = get_stack_status(stack_name)
+    if stack_status == desired_status:
+        l.info("")
+        l.info(f"Stack {stack_name} has already reached the desired status: {desired_status}")
+        l.info("")
+        return stack_status
+    
+    l.info("")
+    l.info(f"Waiting for stack {stack_name} to reach the desired status: {desired_status}...")
+    l.info(f"Max retries: {MAX_RETRIES}, retry interval: {RETRY_INTERVAL_SECONDS} seconds, max time: {MAX_RETRIES*RETRY_INTERVAL_SECONDS} seconds...")
+    l.info("")
+
+    s = time.time()
+    while retry < MAX_RETRIES:
+        stack_status = get_stack_status(stack_name)
+        l.info(f"Stack status: {stack_status}. Elapsed time {time.time() - s:.2f} seconds. Retry {retry}/{MAX_RETRIES}")
+
+        if stack_status == "ROLLBACK_IN_PROGRESS" and desired_status != "ROLLBACK_COMPLETE":
+            l.info(f"Stack {stack_name} is rolling back. Current status: {stack_status}")
+            break
+
+        if stack_status == desired_status:
+            l.info(f"Stack {stack_name} has reached the desired status: {desired_status}")
+            break
+
+        if "IN_PROGRESS" not in stack_status:
+            l.info(f"Stack {stack_name} is no longer running. Current status: {stack_status}")
+            break
+            
+        retry += 1
+        time.sleep(RETRY_INTERVAL_SECONDS)
+
+    l.info("")
+    
+    if retry == MAX_RETRIES:
+        l.error(f"Stack {stack_name} has not reached the desired status: {DESIRED_STACK_STATUS} within {MAX_RETRIES} retries which took {MAX_RETRIES*RETRY_INTERVAL_SECONDS} seconds")
+        l.error("Please check the CloudFormation console for more details.")
+        l.error("Exiting...")
+        exit(1)
+
+    return stack_status
+
+def display_stack_events(stack_name: str, cloudformation_client, l: logging.Logger = logging.getLogger(__name__)):
+    l.info(f"Displaying stack events for {stack_name}:")
+
+    events = cloudformation_client.describe_stack_events(StackName=stack_name)['StackEvents']
+
+    l.debug("Events:")
+    l.debug(events)
+
+    for event in events[::-1]:
+        l.info("========================================")
+        l.info(f"EventId: {event['EventId']}")
+        l.info(f"Timestamp: {event['Timestamp']}")
+        l.info(f"ResourceType: {event['ResourceType']}")
+        l.info(f"LogicalResourceId: {event['LogicalResourceId']}")
+        l.info(f"ResourceStatus: {event['ResourceStatus']}")
+        l.info(f"ResourceStatusReason: {event.get('ResourceStatusReason', 'N/A')}")
+        l.info("========================================")
+        l.info("")
+
+def wait_until_stack_is_created_and_get_outputs(stack_name:str, delete_if_failed:bool = True, l: logging.Logger = logging.getLogger(__name__)) -> dict:
+    cloudformation_client = boto3.client('cloudformation')
+
+    stack_status = wait_until_stack_reaches_status(stack_name)
+
+    if stack_status != DESIRED_STACK_STATUS:
+        l.info("")
+        l.info(f"Stack {stack_name} has not reached the desired status: {DESIRED_STACK_STATUS} it instead reached the status: {stack_status}")
+        l.info("")
+        l.info("Displaying stack events:")
+        display_stack_events(stack_name, cloudformation_client, l)
+        l.info("")
+
+        stack_status = wait_until_stack_reaches_status(stack_name, "ROLLBACK_COMPLETE")
+
+        l.info("")
+        l.info(f"Stack {stack_name} has reached the status: {stack_status}")
+        l.info("")
+        l.info("Displaying stack events:")
+        display_stack_events(stack_name, cloudformation_client, l)
+        l.info("")
+
+        if (stack_status == "CREATE_FAILED" or stack_status == "ROLLBACK_COMPLETE") and delete_if_failed:
+            l.info("")
+            l.error(f"Stack {stack_name} has failed to create. Deleting the stack...")
+            # Delete the failed stack
+            cloudformation_client.delete_stack(StackName=stack_name)
+
+            # Wait until the stack is deleted
+            stack_status = wait_until_stack_reaches_status(stack_name, "DELETE_COMPLETE")
+
+            if stack_status == "DELETE_COMPLETE":
+                l.info(f"Stack {stack_name} has been successfully deleted.")
+            else:
+                l.error(f"Stack {stack_name} has failed to delete. It has status {stack_status}. Please delete the stack manually.")
+
+            l.info("Exiting...")
+            exit(1)
+        elif not delete_if_failed:
+            l.info("")
+            l.error(f"Stack {stack_name} has failed to create and delete_if_failed is set to False. Please delete the stack manually.")
+            l.info("Exiting...")
+            exit(1)
+
+    elif not delete_if_failed and "ROLLBACK" in stack_status:
+        l.info("")
+        l.error(f"Stack {stack_name} has failed to create. Please delete the stack manually.")
+        l.info("Exiting...")
+        exit(1)
+    else:
+
+        # Describe the stack and get the outputs
+        stack = cloudformation_client.describe_stacks(StackName=stack_name)['Stacks'][0]
+
+        if 'Outputs' in stack:
+            stack_outputs = stack['Outputs']
+        else:
+            stack_outputs = None
+
+        l.info("")
+        l.info(f"Stack {stack_name} has been successfully created.")
+        if stack_outputs:
+            l.debug("Stack outputs:")
+            l.debug("")
+
+            # l.info the outputs
+            for output in stack_outputs:
+                l.debug(f"Output Key: {output['OutputKey']}")
+                l.debug(f"Output Value: {output['OutputValue']}")
+                l.debug("")
+            # Convert the outputs to a dictionary
+
+            stack_outputs = {output['OutputKey']: output['OutputValue'] for output in stack_outputs}
+
+        # Return the outputs
+        return stack_outputs
+    
+def validate_template(template_name: str, l: logging.Logger = logging.getLogger(__name__)) -> str:
+        cloudformation_client = boto3.client('cloudformation')
+        
+        try:
+            with open(template_name, 'r') as f:
+                template_body = f.read()
+        except Exception as e:
+            l.error(f"Could not open template {template_name}")
+            l.error(e)
+            exit(1)
+        
+        
+        l.info("Validating template")
+        try:
+            response = cloudformation_client.validate_template(TemplateBody=template_body)  
+            if l.level == logging.DEBUG:
+                pprint(response)
+        except botocore.exceptions.ClientError as e:
+            l.error("Template is not valid")
+            l.error(e)
+            exit(1)
+        l.info("Template is valid")
+        return template_body
+

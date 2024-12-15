@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation Template for creating an IAM instance profile role for SSM as well as Ansible Policy.'
+
+Parameters:
+  RoleName:
+    Type: String
+    Description: The name of the role for instance profile.
+    Default: SSMRole
+  PolicyName:
+    Type: String
+    Description: The name of the ansible policy for instance profile.
+    Default: AnsiblePolicy
+  InstanceProfileName:
+    Type: String
+    Description: The name of the instance profile.
+    Default: SSMInstanceProfile
+
+Resources:
+  SSMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Ref RoleName
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+  
+  AnsiblePolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: !Ref PolicyName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:PutObject'
+              - 's3:GetObject'
+              - 's3:AbortMultipartUpload'
+              - 's3:ListBucket'
+              - 's3:DeleteObject'
+              - 's3:GetObjectVersion'
+              - 's3:ListMultiRegionAccessPoints'
+            Resource: '*'
+      Roles:
+        - !Ref SSMRole
+  
+  InstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Roles:
+        - !Ref SSMRole
+      InstanceProfileName: !Ref InstanceProfileName
+
+Outputs:
+  RoleArn:
+    Value: !GetAtt SSMRole.Arn
+    Description: The ARN of the IAM role for instance profile.
+  RoleName:
+    Value: !Ref RoleName
+    Description: The name of the IAM role for instance profile.
+  PolicyName:
+    Value: !Ref PolicyName
+    Description: The name of the IAM policy for instance profile.
+  InstanceProfileName:
+    Value: !Ref InstanceProfileName
+    Description: The name of the IAM instance profile.

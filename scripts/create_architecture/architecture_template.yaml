@@ -1,0 +1,980 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation Template for the AWS CloudFormation Template
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.117.132.0/24
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+      - Key: Name
+        Value: EAF-VPC
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: EAF-IGW
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+  Subnet0:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.117.132.0/26
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: EAF Subnet0 AvailabilityZone0
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.117.132.64/26
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: EAF Subnet1 AvailabilityZone1
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.117.132.128/26
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: EAF Subnet2 AvailabilityZone2
+  Subnet0Tier2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.117.132.208/28
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: EAF Subnet0 AvailabilityZone0 Tier 2
+  Subnet1Tier2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.117.132.224/28
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: EAF Subnet1 AvailabilityZone1 Tier 2
+  Subnet2Tier2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.117.132.240/28
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: EAF Subnet2 AvailabilityZone2 Tier 2
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.117.132.192/28
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: EAF Public Subnet
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: EAF-Database-Subnet-Group
+      SubnetIds:
+      - !Ref Subnet0
+      - !Ref Subnet1
+      Tags:
+      - Key: Name
+        Value: EAF-Database-Subnet-Group
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+    DependsOn:
+    - InternetGatewayAttachment
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: EAF-Public-RouteTable
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: EAF-Private-RouteTable
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+  SubnetRouteTableAssociation0:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet0
+      RouteTableId: !Ref PrivateRouteTable
+  SubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref PrivateRouteTable
+  SubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet2
+      RouteTableId: !Ref PrivateRouteTable
+  SubnetRouteTableAssociation0Tier2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet0Tier2
+      RouteTableId: !Ref PrivateRouteTable
+  SubnetRouteTableAssociation1Tier2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1Tier2
+      RouteTableId: !Ref PrivateRouteTable
+  SubnetRouteTableAssociation2Tier2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet2Tier2
+      RouteTableId: !Ref PrivateRouteTable
+  KMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS key for encryption
+      KeyPolicy:
+        Id: EAF_kms_key_policy
+        Statement:
+        - Action:
+          - kms:*
+          Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::255319289783:root
+          Resource: '*'
+          Sid: Allow administration of the key
+        Version: '2012-10-17'
+  KMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/Splunk-KMS-Key
+      TargetKeyId: !Ref KMSKey
+  Deploy:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: Deploy
+      GroupDescription: Security group for Deploy worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  Jumphost:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: Jumphost
+      GroupDescription: Security group for Jumphost worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  AccessToLoadBalancer:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: AccessToLoadBalancer
+      GroupDescription: Security group for AccessToLoadBalancer worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  DeploymentServer:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: DeploymentServer
+      GroupDescription: Security group for DeploymentServer worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  ApplicationLoadBalancer:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: ApplicationLoadBalancer
+      GroupDescription: Security group for ApplicationLoadBalancer worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  Master:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: Master
+      GroupDescription: Security group for Master worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  MonitoringConsole:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: MonitoringConsole
+      GroupDescription: Security group for MonitoringConsole worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  Forwarder:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: Forwarder
+      GroupDescription: Security group for Forwarder worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  SearchHead:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: SearchHead
+      GroupDescription: Security group for SearchHead worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  LicenseServer:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: LicenseServer
+      GroupDescription: Security group for LicenseServer worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  Indexer:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: Indexer
+      GroupDescription: Security group for Indexer worker instances
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  AccessToLoadBalancerIngress443:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref AccessToLoadBalancer
+      SourceSecurityGroupId: !Ref ApplicationLoadBalancer
+      IpProtocol: tcp
+      FromPort: '443'
+      ToPort: '443'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  AccessToLoadBalancerIngress80:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref AccessToLoadBalancer
+      SourceSecurityGroupId: !Ref ApplicationLoadBalancer
+      IpProtocol: tcp
+      FromPort: '80'
+      ToPort: '80'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  AccessToLoadBalancerIngress8000:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref AccessToLoadBalancer
+      SourceSecurityGroupId: !Ref ApplicationLoadBalancer
+      IpProtocol: tcp
+      FromPort: '8000'
+      ToPort: '8000'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  ApplicationLoadBalancerIngress8000:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ApplicationLoadBalancer
+      SourceSecurityGroupId: !Ref SearchHead
+      IpProtocol: tcp
+      FromPort: '8000'
+      ToPort: '8000'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  DeployIngress8089:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Deploy
+      SourceSecurityGroupId: !Ref LicenseServer
+      IpProtocol: tcp
+      FromPort: '8089'
+      ToPort: '8089'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  DeployIngress8191:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Deploy
+      SourceSecurityGroupId: !Ref SearchHead
+      IpProtocol: tcp
+      FromPort: '8191'
+      ToPort: '8191'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  IndexerIngress8089:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Indexer
+      SourceSecurityGroupId: !Ref LicenseServer
+      IpProtocol: tcp
+      FromPort: '8089'
+      ToPort: '8089'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  SearchHeadIngress8089:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SearchHead
+      SourceSecurityGroupId: !Ref Master
+      IpProtocol: tcp
+      FromPort: '8089'
+      ToPort: '8089'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  SearchHeadIngress8191:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SearchHead
+      SourceSecurityGroupId: !Ref Deploy
+      IpProtocol: tcp
+      FromPort: '8191'
+      ToPort: '8191'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  SearchHeadIngress9997:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SearchHead
+      SourceSecurityGroupId: !Ref Indexer
+      IpProtocol: tcp
+      FromPort: '9997'
+      ToPort: '9997'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  DeployIngress9997:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Deploy
+      SourceSecurityGroupId: !Ref Indexer
+      IpProtocol: tcp
+      FromPort: '9997'
+      ToPort: '9997'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  ForwarderIngress9997:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Forwarder
+      SourceSecurityGroupId: !Ref DeploymentServer
+      IpProtocol: tcp
+      FromPort: '9997'
+      ToPort: '9997'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  MasterIngress8089:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Master
+      SourceSecurityGroupId: !Ref LicenseServer
+      IpProtocol: tcp
+      FromPort: '8089'
+      ToPort: '8089'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  MasterIngress9997:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Master
+      SourceSecurityGroupId: !Ref Indexer
+      IpProtocol: tcp
+      FromPort: '9997'
+      ToPort: '9997'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  LicenseServerIngress9997:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref LicenseServer
+      SourceSecurityGroupId: !Ref Indexer
+      IpProtocol: tcp
+      FromPort: '9997'
+      ToPort: '9997'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  ForwarderIngress8089:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Forwarder
+      SourceSecurityGroupId: !Ref LicenseServer
+      IpProtocol: tcp
+      FromPort: '8089'
+      ToPort: '8089'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  DeploymentServerIngress8089:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DeploymentServer
+      SourceSecurityGroupId: !Ref LicenseServer
+      IpProtocol: tcp
+      FromPort: '8089'
+      ToPort: '8089'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  LicenseServerIngress8089:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref LicenseServer
+      SourceSecurityGroupId: !Ref SearchHead
+      IpProtocol: tcp
+      FromPort: '8089'
+      ToPort: '8089'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  JumphostIngress8000:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Jumphost
+      SourceSecurityGroupId: !Ref MonitoringConsole
+      IpProtocol: tcp
+      FromPort: '8000'
+      ToPort: '8000'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  DeployIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Deploy
+      SourceSecurityGroupId: !Ref Deploy
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  JumphostIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Jumphost
+      SourceSecurityGroupId: !Ref Jumphost
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  AccessToLoadBalancerIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref AccessToLoadBalancer
+      SourceSecurityGroupId: !Ref AccessToLoadBalancer
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  DeploymentServerIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref DeploymentServer
+      SourceSecurityGroupId: !Ref DeploymentServer
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  ApplicationLoadBalancerIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ApplicationLoadBalancer
+      SourceSecurityGroupId: !Ref ApplicationLoadBalancer
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  MasterIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Master
+      SourceSecurityGroupId: !Ref Master
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  MonitoringConsoleIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref MonitoringConsole
+      SourceSecurityGroupId: !Ref MonitoringConsole
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  ForwarderIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Forwarder
+      SourceSecurityGroupId: !Ref Forwarder
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  SearchHeadIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SearchHead
+      SourceSecurityGroupId: !Ref SearchHead
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  LicenseServerIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref LicenseServer
+      SourceSecurityGroupId: !Ref LicenseServer
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  IndexerIngress165535:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref Indexer
+      SourceSecurityGroupId: !Ref Indexer
+      IpProtocol: '-1'
+      FromPort: '1'
+      ToPort: '65535'
+    DependsOn:
+    - Deploy
+    - Jumphost
+    - AccessToLoadBalancer
+    - DeploymentServer
+    - ApplicationLoadBalancer
+    - Master
+    - MonitoringConsole
+    - Forwarder
+    - SearchHead
+    - LicenseServer
+    - Indexer
+  AwsServicesSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupName: AWS Services Security Group
+      GroupDescription: Security group for AWS services
+      SecurityGroupIngress:
+      - CidrIp: 10.117.132.0/26
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIp: 10.117.132.64/26
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIp: 10.117.132.128/26
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIp: 10.117.132.208/28
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIp: 10.117.132.224/28
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      - CidrIp: 10.117.132.240/28
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      SecurityGroupEgress: []
+  SsmVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: com.amazonaws.us-east-2.ssm
+      VpcEndpointType: Interface
+      SubnetIds:
+      - !Ref Subnet0
+      - !Ref Subnet1
+      - !Ref Subnet2
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+      - !Ref AwsServicesSecurityGroup
+  SsmMessagesVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: com.amazonaws.us-east-2.ssmmessages
+      VpcEndpointType: Interface
+      SubnetIds:
+      - !Ref Subnet0
+      - !Ref Subnet1
+      - !Ref Subnet2
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+      - !Ref AwsServicesSecurityGroup
+  S3VpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: com.amazonaws.us-east-2.s3
+      VpcEndpointType: Gateway
+      RouteTableIds:
+      - !Ref PrivateRouteTable
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: eaf-255319289783-opsview-us-east-2
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Suspended
+      LifecycleConfiguration:
+        Rules:
+        - AbortIncompleteMultipartUpload:
+            DaysAfterInitiation: 7
+          Status: Disabled
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+        - Action:
+          - s3:GetObject
+          - s3:ListBucket
+          Condition:
+            StringEquals:
+              aws:SourceVpc: !Ref VPC
+          Effect: Allow
+          Principal: '*'
+          Resource:
+          - !Sub arn:aws:s3:::${S3Bucket}
+          - !Sub arn:aws:s3:::${S3Bucket}/*
+          Sid: AllowVPCPrivateSubnetRead
+        Version: '2012-10-17'
