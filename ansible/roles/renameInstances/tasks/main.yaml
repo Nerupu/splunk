@@ -1,0 +1,13 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.id }}"
+
+- name: Get Instance Name Tag
+  #shell: aws ec2 describe-tags --filters "Name=resource-id,Values={{ ansible_aws_ssm_instance_id }}" --output=text | grep Name | awk '{print $5}'
+  shell: curl http://169.254.169.254/latest/meta-data/tags/instance/Name
+  register: host_name
+  # delegate_to: localhost
+- debug: var=host_name
+- name: Set a hostname specifying strategy
+  ansible.builtin.hostname:
+      name: "{{ host_name.stdout }}"
+  become: true

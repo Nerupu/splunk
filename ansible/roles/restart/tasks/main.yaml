@@ -1,0 +1,21 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.id }}"
+
+- debug: 
+    msg="{{ item.id }}" 
+
+- name: Restart Splunk
+  ansible.builtin.systemd:
+    state: restarted
+    name: Splunkd
+  ignore_unreachable: true
+  ignore_errors: true
+
+- name: status Splunk
+  shell: /opt/splunk/bin/splunk status
+  register: status_output
+  ignore_errors: true
+
+- debug: 
+    msg="{{ status_output.stdout }}" 
+  when: status_output.changed

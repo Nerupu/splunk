@@ -1,0 +1,23 @@
+all:
+  vars:
+    instance:
+      python_interpreter: /bin/python3
+    bucket:
+      files: "{{ lookup('env', 'S3_BUCKET_NAME') }}"
+    splunk:
+      plugin:
+        temp: /tmp/splunk-it-service-intelligence_4150.zip
+        spl: /tmp/splunk-it-service-intelligence_4150.spl
+      binary:
+        bucket_dest: splunk/binary/splunk-9.1.1-64e843ea36b1.x86_64.rpm
+        instance_dest: /tmp/splunk-9.1.1-64e843ea36b1.x86_64.rpm
+      licenses:
+        licenseI:
+          bucket_dest: splunk/license/v1/SplunkI24.License
+          instance_dest: /tmp/SplunkI24.License
+        licenseE: 
+          bucket_dest: splunk/license/v1/SplunkE24.License
+          instance_dest: /tmp/SplunkE24.License
+      app:
+        bucket_dest: splunk/deploymentServer/default_app/v1/inputs.conf
+        instance_dest: /opt/splunk/etc/deployment-apps/app/default/inputs.conf

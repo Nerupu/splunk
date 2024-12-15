@@ -1,0 +1,79 @@
+---
+- name: Display the JSON file content
+  shell: cat terraform.tfstate
+  register: result
+
+- name: Save the Json data to a Variable as a Fact
+  set_fact:
+    jsondata: "{{ result.stdout | from_json }}"
+
+- name: Create list of servers
+  set_fact:
+    server_list: "{{ jsondata | json_query(jmesquery) }}"
+  vars:
+    jmesquery: 'outputs.instances_list.value'
+
+- name: Create list of all servers
+  set_fact:
+    all_list: "{{ all_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+
+- name: Create master list
+  set_fact:
+    master_list: "{{ master_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type == "Master"
+
+- name: Create searchhead list
+  set_fact:
+    searchHead_list: "{{ searchHead_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type == "SearchHead"
+
+- name: Create indexer list
+  set_fact:
+    indexer_list: "{{ indexer_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ]}}"
+  loop: "{{ server_list }}"
+  when: item.type == "Indexer"
+
+- name: Create forwarder list
+  set_fact:
+    forwarder_list: "{{ forwarder_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type == "Forwarder"
+
+- name: Create license list
+  set_fact:
+    license_list: "{{ license_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type == "LicenseServer"
+
+- name: Create deploy list
+  set_fact:
+    deploy_list: "{{ deploy_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type == "Deploy"
+
+- name: Create deploymentserver list
+  set_fact:
+    deploymentserver_list: "{{ deploymentserver_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type == "DeploymentServer"
+
+- name: Create licenseSlaves list
+  set_fact:
+    license_slaves_list: "{{ license_slaves_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type != "LicenseServer"
+
+- name: Create monitoringConsole list
+  set_fact:
+    monitoringConsole_list: "{{ monitoringConsole_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type == "MonitoringConsole"
+
+- name: Create disable indexing list
+  set_fact:
+    disable_indexing_list: "{{ disable_indexing_list|default([]) + [ {'id': item.instance_id, 'dns': item.private_dns} ] }}"
+  loop: "{{ server_list }}"
+  when: item.type == "Master" or item.type == "SearchHead" or item.type == "Deploy" or item.type == "DeploymentServer"

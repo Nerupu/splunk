@@ -1,0 +1,33 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.id }}"
+
+- name: Create indexers list
+  set_fact:
+    indexers_list_of_dns: "{{ indexer_list | map(attribute='dns') | join(',') }}"
+
+- name: Create indexers list
+  vars:
+    protocol: "https://"
+    port: ":9997"
+  set_fact:
+    indexers_list_of_dns: "{{ indexers_list_of_dns.split(',') | map('regex_replace', '(.+)', protocol + '\\1' + port) | join(',') }}"
+
+- debug: 
+    msg="{{ indexers_list_of_dns }}" 
+
+- name: Creating a outputs.conf file to disable indexing
+  copy:
+    dest: "/opt/splunk/etc/system/local/outputs.conf"
+    content: |
+      [indexAndForward]
+      index = false
+
+      [tcpout]
+      defaultGroup = default-autolb-group
+      forwardedindex.filter.disable = true
+      indexAndForward = false
+
+      [tcpout:default-autolb-group]
+      server="{{ indexers_list_of_dns }}"
+
+      /opt/splunk/bin/splunk enable listen 9997

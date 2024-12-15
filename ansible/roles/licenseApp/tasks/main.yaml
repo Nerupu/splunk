@@ -1,0 +1,14 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.id }}"
+
+- name: Save SA-ITSI-Licensechecker from s3 to instance
+  command: aws s3 cp --recursive s3://{{ lookup('env', 'S3_BUCKET_NAME') }}/SA-ITSI-Licensechecker /opt/splunk/etc/apps/SA-ITSI-Licensechecker
+
+- name: Save SA-UserAccess from s3 to instance
+  command: aws s3 cp --recursive s3://{{ lookup('env', 'S3_BUCKET_NAME') }}/SA-UserAccess /opt/splunk/etc/apps/SA-UserAccess
+
+- name: Change owner of SA-ITSI-Licensechecker
+  command: chown -R splunk:splunk /opt/splunk/etc/apps/SA-ITSI-Licensechecker
+
+- name: Change owner of SA-UserAccess
+  command: chown -R splunk:splunk /opt/splunk/etc/apps/SA-UserAccess

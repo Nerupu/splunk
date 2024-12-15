@@ -1,0 +1,18 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.id }}"
+
+- name: Create directory
+  file:
+    path: /opt/splunk/etc/deployment-apps/app/default
+    state: directory
+
+- name: Get Splunk app file
+  amazon.aws.aws_s3:
+    bucket: "{{ bucket.files }}"
+    mode: get
+    object: "{{ splunk.app.bucket_dest }}"
+    dest: "{{ splunk.app.instance_dest }}"
+
+- debug:
+    msg="{{ result.msg }}"
+  when: result.changed

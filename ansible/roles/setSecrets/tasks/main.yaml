@@ -1,0 +1,8 @@
+---
+- name: Set splunk admin password from environment variable.
+  set_fact:
+    splunk_admin_password: "{{ lookup('env', 'SPLUNK_ADMIN_PASSWORD') }}"
+
+- name: Set splunk admin password from environment variable.
+  set_fact:
+    splunk_cluster_password: "{{ lookup('env', 'SPLUNK_CLUSTER_PASSWORD') }}"

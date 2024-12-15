@@ -1,0 +1,8 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.id }}"
+
+- name: Save SA-IndexCreation from s3 to instance
+  command: aws s3 cp --recursive s3://{{ lookup('env', 'S3_BUCKET_NAME') }}/SA-IndexCreation /opt/splunk/etc/manager-apps/SA-IndexCreation
+
+- name: Change owner of SA-IndexCreation
+  command: chown -R splunk:splunk /opt/splunk/etc/manager-apps/SA-IndexCreation

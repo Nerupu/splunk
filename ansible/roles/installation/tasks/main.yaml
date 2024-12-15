@@ -1,0 +1,72 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.instance_id }}"
+
+- name: Ensure group "splunk" exists
+  ansible.builtin.group:
+    name: splunk
+    state: present
+
+- name: Create a login user
+  ansible.builtin.user:
+    name: splunk
+    password: "{{ 'Splunk@EAF@2023' | password_hash('sha512') }}" 
+    groups: 
+      - splunk
+    state: present
+
+- name: add user to sudo file
+  community.general.sudoers:
+    name: 91-splunk-init-users
+    user: splunk
+    state: present
+    nopassword: true
+    commands:
+      - '/opt/splunk/bin/splunk stop'
+      - '/usr/bin/systemctl start Splunkd'
+      - '/opt/splunk/bin/splunk start'
+      - '/usr/bin/systemctl restart Splunkd'
+      - '/usr/bin/systemctl stop Splunkd'
+
+
+- name: Install package boto3
+  command: pip3 install boto3
+
+- name: Get Splunk binary
+  amazon.aws.aws_s3:
+    bucket: "{{ bucket.files }}"
+    mode: get
+    object: "{{ splunk.binary.bucket_dest }}"
+    dest: "{{ splunk.binary.instance_dest }}"
+  register: getresult
+
+- debug: 
+    msg="{{ getresult.msg }}" 
+  when: getresult.changed
+
+- name: Install package.
+  yum:
+     name: "{{ splunk.binary.instance_dest }}"
+     state: present
+
+- name: Change ownership of splunk directory
+  command: chown -R splunk:splunk /opt/splunk
+
+- name: Start splunk
+  command: /opt/splunk/bin/splunk start --accept-license --answer-yes --no-prompt --seed-passwd {{ splunk_admin_password }}
+  become_user: splunk
+  register: getresult
+
+- debug: 
+    msg="{{ getresult.msg }}" 
+  when: getresult.changed
+
+- name: Stop splunk
+  command: /opt/splunk/bin/splunk stop
+  become_user: splunk
+
+- name: Enable systemd managed boot start
+  command: /opt/splunk/bin/splunk enable boot-start -systemd-managed 1 -user splunk -group splunk
+
+- name: Start splunk
+  command: systemctl start Splunkd
+  

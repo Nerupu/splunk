@@ -1,0 +1,55 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.id }}"
+
+- name: Extract splunk-it-service-intelligence_4150.zip into /tmp/
+  become: true
+  become_method: sudo
+  ansible.builtin.unarchive:
+    src: splunk-it-service-intelligence_4150.zip
+    dest: /tmp/
+
+- name: Extract splunk plugin
+  become: true
+  become_method: sudo
+  ansible.builtin.unarchive:
+    src: "{{ splunk.plugin.spl }}"
+    dest: /opt/splunk/etc/shcluster/apps
+    remote_src: yes
+
+- name: Append server.conf file
+  lineinfile:
+    path: /opt/splunk/etc/system/local/server.conf
+    line: "{{ item }}"
+    insertafter: EOF
+  with_items:
+    - "[shclustering]"
+    - "shcluster_label = SH_EAF"
+    - "pass4SymmKey = {{ splunk_cluster_password }}"
+
+- name: Restart Splunk
+  ansible.builtin.systemd:
+    state: restarted
+    name: Splunkd
+  ignore_unreachable: true
+  ignore_errors: true
+
+- name: status Splunk
+  shell: /opt/splunk/bin/splunk status
+  register: status_output
+  ignore_errors: true
+
+- debug: 
+    msg="{{ status_output.stdout }}" 
+  when: status_output.changed
+
+- name: Configure 
+  command: /opt/splunk/bin/splunk apply shcluster-bundle --answer-yes -target https://"{{ searchHead_list[0].dns }}":8089 -auth admin:{{ splunk_admin_password }} 
+  retries: 3
+  delay: 60
+  register: result
+  until: result.rc == '22'
+  ignore_errors: true
+
+- name: Wait for configuration to complete
+  pause:
+    minutes: 5

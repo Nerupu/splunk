@@ -1,0 +1,12 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ item.id }}"
+
+- name: Save SA-IndexCreation from s3 to instance
+  command: aws s3 cp --recursive s3://{{ lookup('env', 'S3_BUCKET_NAME') }}/SA-IndexCreation /opt/splunk/etc/peer-apps/SA-IndexCreation
+
+- name: Change owner of SA-IndexCreation
+  command: chown -R splunk:splunk /opt/splunk/etc/peer-apps/SA-IndexCreation
+  
+- name: Enable Splunk listening on port 9997
+  command: /opt/splunk/bin/splunk enable listen 9997 -auth admin:{{ splunk_admin_password }} 
+  

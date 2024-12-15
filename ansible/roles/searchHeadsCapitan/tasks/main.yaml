@@ -1,0 +1,39 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ searchHead_list[0].id }}"
+
+- name: Create searchhead list
+  set_fact:
+    searchHead_list_of_dns: "{{ searchHead_list | map(attribute='dns') | join(',') }}"
+
+- name: Create searchhead list
+  vars:
+    protocol: "https://"
+    port: ":8089"
+  set_fact:
+    searchHead_list_of_dns: "{{ searchHead_list_of_dns.split(',') | map('regex_replace', '(.+)', protocol + '\\1' + port) | join(',') }}"
+
+- debug: 
+    msg="{{ searchHead_list_of_dns }}" 
+
+- name: Configure a search head capitan
+  command: > 
+    /opt/splunk/bin/splunk bootstrap shcluster-captain 
+    -servers_list "{{ searchHead_list_of_dns }}"
+    -auth admin:{{ splunk_admin_password }}
+  retries: 3
+  delay: 60
+  register: result
+  until: result.rc == 0
+
+- name: Resync kvstore
+  command: > 
+    /opt/splunk/bin/splunk resync kvstore -auth admin:{{ splunk_admin_password }}
+  retries: 3
+  delay: 60
+  register: result
+  until: result.rc == 0
+
+- name: Perform rolling restart on search head cluster members
+  command:  /opt/splunk/bin/splunk rolling-restart shcluster-members -searchable true
+ 
+  

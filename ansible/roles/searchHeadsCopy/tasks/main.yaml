@@ -1,0 +1,11 @@
+---
+- set_fact: ansible_aws_ssm_instance_id="{{ searchHead_list[0].id }}"
+
+- name: Save SA-IndexCreation from instance to s3
+  command: aws s3 cp --recursive /opt/splunk/etc/apps/SA-IndexCreation s3://{{ lookup('env', 'S3_BUCKET_NAME') }}/SA-IndexCreation
+
+- name: Save SA-ITSI-Licensechecker from instance to s3
+  command: aws s3 cp --recursive /opt/splunk/etc/apps/SA-ITSI-Licensechecker s3://{{ lookup('env', 'S3_BUCKET_NAME') }}/SA-ITSI-Licensechecker
+
+- name: Save SA-UserAccess from instance to s3
+  command: aws s3 cp --recursive /opt/splunk/etc/apps/SA-UserAccess s3://{{ lookup('env', 'S3_BUCKET_NAME') }}/SA-UserAccess
