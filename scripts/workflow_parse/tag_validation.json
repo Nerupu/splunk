@@ -1,0 +1,38 @@
+{
+    "tags" : {
+        "required" : [
+            "environment",
+            "product",
+            "application",
+            "ccp_managed",
+            "compliance",
+            "data_residency",
+            "instance",
+            "business_unit"
+        ],
+        "allowed_values" : {
+            "environment" : [
+                "dev",
+                "production"
+            ],
+            "product" : ["splunk"],
+            "application" : ["splunk"],
+            "ccp_managed": [
+                "core"
+            ],
+            "compliance" : [
+                "test"
+            ],
+            "data_residency" : [
+                "eea"
+            ],
+            "instance" : [
+                "uk",
+                "us"
+            ],
+            "business_unit" : [
+                "test1"
+            ]
+        }
+    }
+}

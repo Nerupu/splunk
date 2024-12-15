@@ -1,0 +1,56 @@
+{
+    "cloudformation_stack_name": "prefix of all stack",
+    "splunk_license": "license for splunk",
+    "general_parameters":{
+        "account_id": "sanity check for account_id",
+        "aws_region": "region where to deploy architecture",
+        "vpc":{
+            "id": "create or vpc-id, if vpc id subnet will be taken form id, if create you can provide additionals parameters, otherwise defaults will be used",
+            "cidr": "cidr for vpc, if vpc id is set to create, this will be used",
+            "public_subnet_cidr": "cidr for public subnet, if vpc id is set to create, this will be used",
+            "private_subnet_cidr": "cidr for private subnet, if vpc id is set to create, this will be used",
+            "environment_name": "name of environment, will be used for naming and prefixed to all resourced created in vpc"
+        },
+        "load_balancer" : {
+            "tags" : {
+                "key": "tags for application and network load balancers"
+            }
+        },
+            
+        "instances_quantity": "int, number of instances, will check if the same number of objeck were passed to specifications_per_worker"
+    },
+    "common_instance_parameters":
+    {   
+        "note": "this note will not be present in workflow, common_instance_parameters define common parameters for all instances but will be overwriten by specifications_per_worker",
+        "instance_type": "valid aws instance type",
+        "common_name_part": "prefix of all instances",
+        "ami_name": "filtered name of ami to use for all instances",
+        "instance_profile": "instance profile to use for all instances (if not set, will be created)",
+        "subnet": "if vpc id has been set and this is empty it will be taken from vpc (same if vpc id is set to create), but if this will be set to valid subnet, this subnet will be used",
+        "security_groups": ["groups to add to each instance, if vpc_id is set to create, this will be populated automatically", "placeholder_sg2"],
+        "worker_type": "unset - it's good to keep that with value 'unset' here is it will provide easier time debugging. Each instance should have it's own worker_type",
+        "tags": {
+            "required" : {
+                "key": "value of required tags for all instances"
+            },
+            "optional" : {
+                "key": "value of optional tags for all instances if specified it will be merged with required tags, optional key is not needed"
+            }
+        },
+        "root_volume_size": "size of root volume"
+    },
+    "specifications_per_worker":[
+        {
+            "worker_type": "specified value from: master, indexer, forwarder, search-head, license-server, deploy, deployment-server"
+        },
+        {
+            "worker_type": "specified value from: master, indexer, forwarder, search-head, license-server, deploy, deployment-server",
+            "tags" : {
+                "key": "value of optional tags only for this specified instance, will be merged with required tags"
+            }
+        },
+        {
+            "worker_type": "specified value from: master, indexer, forwarder, search-head, license-server, deploy, deployment-server"
+        }
+    ]
+}

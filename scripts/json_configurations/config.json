@@ -1,0 +1,157 @@
+{
+    "workflow_parameters":{
+        "github_role_arn": "arn:aws:iam::255319289783:role/github-action-role"
+    },
+    "general_parameters": {
+        "account_id": "255319289783",
+        "aws_region": "us-east-2",
+        "loglevel": "info",
+        "infrastructure_name_prefix": "EAF",
+        "vpc": {
+            "id": "create",
+            "cidr": "10.117.132.0/24",
+            "private_subnet_cidr_az1": "10.117.132.0/26",
+            "private_subnet_cidr_az2": "10.117.132.64/26",
+            "private_subnet_cidr_az3": "10.117.132.128/26",
+            "public_subnet_cidr": "10.117.132.192/28",
+            "private_subnet_cidr_az1_tier2": "10.117.132.208/28",
+            "private_subnet_cidr_az2_tier2": "10.117.132.224/28",
+            "private_subnet_cidr_az3_tier2": "10.117.132.240/28"
+        },
+        "access_to_load_balancer_sg_id": "",
+        "instances_quantity": 14,
+        "load_balancer": {  
+            "tags" : {
+                "environment": "dev",
+                "product": "splunk",
+                "application": "splunk",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            } 
+        },
+        "kms_key_alias": "Splunk-KMS-Key",
+        "instance_profile": {
+            "name": "SSMInstanceProfile",
+            "role_name": "SSMRole",
+            "policy_name": "AnsiblePolicy"
+        },
+        "provision_jumphost_sg_group": "true"
+    },
+    "common_instance_parameters": {
+        "instance_type": "t2.micro",
+        "ami_name": "CCP Hardened Amazon Linux 2*",
+        "worker_type": "unset",
+        "tags": {
+            "required" : {
+                "environment" : "dev",
+                "product" : "splunk",
+                "application" : "splunk",
+                "ccp_managed" : "core",
+                "compliance" : "test",
+                "data_residency" : "eea",
+                "instance" : "uk",
+                "business_unit": "test1"
+            }
+        },
+        "root_volume": {
+            "volume_size": "20",
+            "volume_type": "gp3",
+            "delete_on_termination": "true"
+        },
+        "data_volumes": []
+    },
+    "specifications_per_worker": [
+        {
+            "worker_type": "SearchHead",
+            "instance_type": "t3.xlarge",
+            "data_volumes": [
+                    {
+                        "mount_point": "/mnt/data1",
+                        "volume_size": "100",
+                        "volume_type": "gp3",
+                        "delete_on_termination": "true",
+                        "iops": "3000",
+                        "throughput": "125"
+                    },
+                    {
+                        "mount_point": "/mnt/data2",
+                        "volume_size": "10",
+                        "volume_type": "gp3",
+                        "delete_on_termination": "true",
+                        "iops": "3000",
+                        "throughput": "125"
+                    }
+                ]
+        },
+        {
+            "worker_type": "SearchHead",
+            "instance_type": "t3.xlarge"
+        },
+        {
+            "worker_type": "SearchHead",
+            "instance_type": "t3.xlarge"
+        },
+        {
+            "worker_type": "Indexer",
+            "instance_type": "t3.medium",
+            "root_volume": {
+                "volume_size": "50",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            }
+        },
+        {
+            "worker_type": "Indexer",
+            "instance_type": "t3.medium",
+            "root_volume": {
+                "volume_size": "50",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            }
+        },
+        {
+            "worker_type": "Indexer",
+            "instance_type": "t3.medium",
+            "root_volume": {
+                "volume_size": "50",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            }
+        },
+        {
+            "worker_type": "Forwarder",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Forwarder",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Forwarder",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "LicenseServer",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Master",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Deploy",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "DeploymentServer",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "MonitoringConsole",
+            "instance_type": "t3.medium"
+        }
+    ]
+}

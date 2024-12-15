@@ -1,0 +1,161 @@
+{
+  "general_parameters": {
+    "splunk_license": "placeholder",
+    "account_id": "255319289783",
+    "aws_region": "us-east-2",
+    "github_role_arn": "arn:aws:iam::255319289783:role/EAF-GITHUB-ROLE-20230419-101609-GitHubTokenRole-1X6JM4SH08LP8",
+    "loglevel": "info",
+    "infrastructure_name_prefix": "EAF",
+    "vpc": {
+      "id": "vpc-0397823a57a79dfb7",
+      "cidr": "10.0.0.0/16",
+      "public_subnet_cidr": "10.0.1.0/24",
+      "private_subnet_cidr_az1": "10.0.2.0/24",
+      "private_subnet_cidr_az2": "10.0.3.0/24",
+      "private_subnet_cidr_az3": "10.0.4.0/24"
+    },
+    "additional_security_group": "",
+    "s3_bucket_name": "prod-255319289783-eaf-splunk-us-east-2",
+    "instances_quantity": 14,
+    "load_balancer": {
+      "tags": {
+        "environment": "dev",
+        "product": "splunk",
+        "application": "splunk",
+        "ccp_managed": "core",
+        "compliance": "test",
+        "data_residency": "eea",
+        "instance": "uk",
+        "business_unit": "test1"
+      }
+    }
+  },
+  "common_instance_parameters": {
+    "instance_type": "t2.micro",
+    "ami_name": "amzn2",
+    "instance_profile": {
+      "name": "SSMInstanceProfile",
+      "role_name": "SSMRole",
+      "policy_name": "AnsiblePolicy"
+    },
+    "public_subnet": "for_now_ignored",
+    "subnet_az1": "subnet-02e9f4ac01bfd9382",
+    "subnet_az2": "subnet-00b81d2eb1bf1b735",
+    "subnet_az3": "subnet-0840d5bbe3edbcb02",
+    "security_group": {
+      "name": "EAF_SPLUNK_MAIN_SG",
+      "description": "Security group that contains all required ports opened for Splunk to work",
+      "port_ranges": "22,8000,9777,8089,8191,9997,9887,433,80,443",
+      "inbound_cidr": "0.0.0.0/0",
+      "lits_id": [
+        ""
+      ]
+    },
+    "worker_type": "unset",
+    "tags": {
+      "required": {
+        "environment": "dev",
+        "product": "splunk",
+        "application": "splunk",
+        "ccp_managed": "core",
+        "compliance": "test",
+        "data_residency": "eea",
+        "instance": "uk",
+        "business_unit": "test1"
+      }
+    },
+    "root_volume": {
+      "volume_size": "20",
+      "volume_type": "gp3",
+      "delete_on_termination": "true"
+    },
+    "data_volumes": []
+  },
+  "specifications_per_worker": [
+    {
+      "worker_type": "search-head",
+      "instance_type": "t2.small",
+      "data_volumes": [
+        {
+          "mount_point": "/mnt/data1",
+          "volume_size": "100",
+          "volume_type": "gp3",
+          "delete_on_termination": "true"
+        },
+        {
+          "mount_point": "/mnt/data2",
+          "volume_size": "10",
+          "volume_type": "gp2",
+          "delete_on_termination": "true"
+        }
+      ]
+    },
+    {
+      "worker_type": "search-head",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "search-head",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "indexer",
+      "instance_type": "t2.small",
+      "root_volume": {
+        "volume_size": "50",
+        "volume_type": "gp3",
+        "delete_on_termination": "true"
+      }
+    },
+    {
+      "worker_type": "indexer",
+      "instance_type": "t2.small",
+      "root_volume": {
+        "volume_size": "50",
+        "volume_type": "gp3",
+        "delete_on_termination": "true"
+      }
+    },
+    {
+      "worker_type": "indexer",
+      "instance_type": "t2.small",
+      "root_volume": {
+        "volume_size": "50",
+        "volume_type": "gp3",
+        "delete_on_termination": "true"
+      }
+    },
+    {
+      "worker_type": "forwarder",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "forwarder",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "forwarder",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "license-server",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "master",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "deploy",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "deployment-server",
+      "instance_type": "t2.small"
+    },
+    {
+      "worker_type": "monitoring-console",
+      "instance_type": "t2.small"
+    }
+  ]
+}

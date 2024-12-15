@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation Template for SSM, SSM Messages, and S3 VPC Endpoints'
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: 'The VPC ID in which to create the VPC endpoints'
+
+  SubnetId1:
+    Type: AWS::EC2::Subnet::Id
+    Description: 'The first ID of Private Subnet in Availability Zone 1 for the VPC endpoints'
+
+  SubnetId2:
+    Type: AWS::EC2::Subnet::Id
+    Description: 'The second ID of Private Subnet in Availability Zone 2 for the VPC endpoints'
+  
+  SubnetId3:
+    Type: AWS::EC2::Subnet::Id
+    Description: 'The third ID of Private Subnet in Availability Zone 3 for the VPC endpoints'
+
+  CreateSsmEndpoint:
+    Type: String
+    Description: 'Flag to create SSM VPC Endpoint (True/False)'
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Default: 'True'
+
+  CreateSsmMessagesEndpoint:
+    Type: String
+    Description: 'Flag to create SSM Messages VPC Endpoint (True/False)'
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Default: 'True'
+
+  CreateS3Endpoint:
+    Type: String
+    Description: 'Flag to create S3 VPC Endpoint (True/False)'
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Default: 'True'
+
+  SecurityGroupId:
+    Type: String
+    Description: 'Security Group ID for the VPC endpoints'
+  
+  RouteTableId:
+    Type: String
+    Description: 'Route Table ID for the VPC endpoints'
+  
+
+Conditions:
+  SsmEndpoint: !Equals [!Ref CreateSsmEndpoint, 'True']
+  SsmMessagesEndpoint: !Equals [!Ref CreateSsmMessagesEndpoint, 'True']
+  S3Endpoint: !Equals [!Ref CreateS3Endpoint, 'True']
+
+
+
+
+Resources:
+  SsmVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: SsmEndpoint
+    Properties:
+      VpcId: !Ref VpcId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      VpcEndpointType: 'Interface'
+      SubnetIds:
+        - !Ref SubnetId1
+        - !Ref SubnetId2
+        - !Ref SubnetId3
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+
+  SsmMessagesVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: SsmMessagesEndpoint
+    Properties:
+      VpcId: !Ref VpcId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      VpcEndpointType: 'Interface'
+      SubnetIds:
+        - !Ref SubnetId1
+        - !Ref SubnetId2
+        - !Ref SubnetId3
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+
+  S3VpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Condition: S3Endpoint
+    Properties:
+      VpcId: !Ref VpcId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcEndpointType: 'Gateway'
+      RouteTableIds:
+        - !Ref RouteTableId
+

@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  Region:
+    Type: String
+    Description: The region where the IAM Role will be created
+
+  AccountId:
+    Type: String
+    Description: The AWS Account ID where the IAM Role will be created
+
+  RepoName:
+    Type: String
+    Description: The name of the GitHub repository where the IAM Role will be created
+    Default: "capgemini-car/EAF-Splunk:*"
+
+  ThumbPrint:
+    Type: String
+    Description: ThumbPrint from token.actions.githubusercontent.com
+    Default: 'False'
+
+  CreateIdentityProvider:
+    Type: String
+    Description: 'Flag to create identity provider (True/False)'
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Default: 'True'
+  
+Conditions:
+  IdProvider: !Equals [!Ref CreateIdentityProvider, 'True']
+
+
+Resources:
+  ExtraAccessPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: ExtraGitHubAccessPolicy
+      Roles:
+        - !Ref GitHubTokenRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: 'kms:*'
+            Resource: '*'
+          - Effect: Allow
+            Action: 'rds:*'
+            Resource: '*'
+          - Effect: Allow
+            Action: 'secretsmanager:*'
+            Resource: '*'
+
+  GitHubTokenRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringLike:
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${RepoName}"
+      Path: "/"
+      MaxSessionDuration: 14400
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+
+  IdentityProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: IdProvider
+    Properties:
+      ClientIdList: 
+        - sts.amazonaws.com
+      ThumbprintList:
+        - !Ref ThumbPrint
+      Url: https://token.actions.githubusercontent.com
+
+Outputs:
+  GitHubTokenRoleArn:
+    Value: !GetAtt GitHubTokenRole.Arn
+    Description: "ARN of the IAM Role created"

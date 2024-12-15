@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Creates security groups with empty inbound and outbound rules"
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: "VPC ID where the security groups will be created"
+  ApplicationLoadBalancerSGName:
+    Type: String
+    Default: "application_load_balancer_sg"
+    Description: "Name of the application load balancer security group"
+  SearchHeadSGName:
+    Type: String
+    Default: "search_head_sg"
+    Description: "Name of the search head security group"
+  HeavyForwarderSGName:
+    Type: String
+    Default: "heavy_forwarder_sg"
+    Description: "Name of the heavy forwarder security group"
+  DeploySGName:
+    Type: String
+    Default: "deploy_sg"
+    Description: "Name of the deploy security group"
+  IndexerSGName:
+    Type: String
+    Default: "indexer_sg"
+    Description: "Name of the indexer security group"
+  DeploymentServerSGName:
+    Type: String
+    Default: "deployment_server_sg"
+    Description: "Name of the deployment server security group"
+  MasterClusterNodeSGName:
+    Type: String
+    Default: "master_cluster_node_sg"
+    Description: "Name of the master cluster node security group"
+  LicenseServerSGName:
+    Type: String
+    Default: "license_server_sg"
+    Description: "Name of the license server security group"
+  AWSServicesSGName:
+    Type: String
+    Default: "aws_service_sg"
+    Description: "Name of the AWS service security group"
+  JumphostSgGroupName:
+    Type: String
+    Default: "JumphostSG"
+    Description: "Name of the jumphost security group"
+  ProvisionJumphostSgGroup:
+    Type: String
+    Default: "true"
+    Description: "Whether to provision the jumphost security group"
+  CIDRBlock1:
+    Type: String
+    Description: "CIDR block of Private Subnet in Availability Zone 1"
+    MinLength: 9
+    MaxLength: 18
+    Default: "0.0.0.0/0"
+  CIDRBlock2:
+    Type: String
+    Description: "CIDR block of Private Subnet in Availability Zone 2"
+    MinLength: 9
+    MaxLength: 18
+    Default: "0.0.0.0/0"
+  CIDRBlock3:
+    Type: String
+    Description: "CIDR block of Private Subnet in Availability Zone 3"
+    MinLength: 9
+    MaxLength: 18
+    Default: "0.0.0.0/0"
+
+Conditions:
+  CreateJumphostSgGroup:
+    !Equals [!Ref ProvisionJumphostSgGroup, "true"]
+
+Resources:
+  ApplicationLoadBalancerSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref ApplicationLoadBalancerSGName
+      GroupDescription: "Security group for splunk application load balancer"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  SearchHeadSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref SearchHeadSGName
+      GroupDescription: "Security group for splunk search head"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  HeavyForwarderSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref HeavyForwarderSGName
+      GroupDescription: "Security group for splunk heavy forwarder"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  DeploySG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref DeploySGName
+      GroupDescription: "Security group for splunk deploy"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  IndexerSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref IndexerSGName
+      GroupDescription: "Security group for splunk indexer"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  DeploymentServerSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref DeploymentServerSGName
+      GroupDescription: "Security group for splunk deployment server"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  MasterClusterNodeSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref MasterClusterNodeSGName
+      GroupDescription: "Security group for splunk master cluster node"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  LicenseServerSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref LicenseServerSGName
+      GroupDescription: "Security group for splunk license server"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+  AWSServicesSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref AWSServicesSGName
+      GroupDescription: "Security group for aws services"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref CIDRBlock1
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref CIDRBlock2
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref CIDRBlock3
+      SecurityGroupEgress: []
+  JumphostSG:
+    Condition: CreateJumphostSgGroup
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: !Ref JumphostSgGroupName
+      GroupDescription: "Security group for jumphost"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+
+Outputs:
+  ApplicationLoadBalancerSGID:
+    Value: !Ref ApplicationLoadBalancerSG
+    Description: "ID of the application load balancer security group"
+  SearchHeadSGID:
+    Value: !Ref SearchHeadSG
+    Description: "ID of the search head security group"
+  HeavyForwarderSGID:
+    Value: !Ref HeavyForwarderSG
+    Description: "ID of the heavy forwarder security group"
+  DeploySGID:
+    Value: !Ref DeploySG
+    Description: "ID of the deploy security group"
+  IndexerSGID:
+    Value: !Ref IndexerSG
+    Description: "ID of the indexer security group"
+  DeploymentServerSGID:
+    Value: !Ref DeploymentServerSG
+    Description: "ID of the deployment server security group"
+  MasterClusterNodeSGID:
+    Value: !Ref MasterClusterNodeSG
+    Description: "ID of the master cluster node security group"
+  LicenseServerSGID:
+    Value: !Ref LicenseServerSG
+    Description: "ID of the license server security group"
+  AWSServicesSGID:
+    Value: !Ref AWSServicesSG
+    Description: "ID of the aws services security group"
+  JumphostSGID:
+    Condition: CreateJumphostSgGroup
+    Value: !Ref JumphostSG
+    Description: "ID of the jumphost security group"

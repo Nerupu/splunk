@@ -1,0 +1,457 @@
+{
+    "aws_region": "eu-central-1",
+    "account_id": "858165505743",
+    "kms_key_id": "<Replace with KMS Key ID>",
+    "instances_list": [
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "SearchHead",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsshd001",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {
+                "/dev/sd1": {
+                    "mount_point": "/mnt/data1",
+                    "volume_size": "10",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                },
+                "/dev/sd2": {
+                    "mount_point": "/mnt/data2",
+                    "volume_size": "10",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            }
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "SearchHead",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsshd002",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "SearchHead",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsshd003",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Indexer",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsixd004",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {
+                "/dev/sd1": {
+                    "mount_point": "/opt/splunk",
+                    "volume_size": "15",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            }
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Indexer",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsixd005",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {
+                "/dev/sd1": {
+                    "mount_point": "/opt/splunk",
+                    "volume_size": "15",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            }
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Indexer",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsixd006",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {
+                "/dev/sd1": {
+                    "mount_point": "/opt/splunk",
+                    "volume_size": "15",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            }
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Forwarder",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsfwd007",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Forwarder",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsfwd008",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Forwarder",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsfwd009",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "LicenseServer",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafslsd010",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Master",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsmsd011",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Deploy",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsdpd012",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "DeploymentServer",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsdsd013",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "eu",
+            "vm_ami_name": "CCP Hardened Amazon Linux 2*",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "MonitoringConsole",
+            "vm_sg_list": [
+                "<Replace with Security Group ID>"
+            ],
+            "vm_tags": {
+                "required": {
+                    "environment": "dev",
+                    "product": "splunk",
+                    "application": "splunk",
+                    "ccp_managed": "core",
+                    "compliance": "test",
+                    "data_residency": "eea",
+                    "instance": "eu",
+                    "business_unit": "test1"
+                }
+            },
+            "vm_subnet": "<Replace with Subnet ID>",
+            "vm_name": "euwaa-eafsmcd014",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        }
+    ]
+}

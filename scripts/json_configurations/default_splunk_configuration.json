@@ -1,0 +1,184 @@
+{
+    "workflow_parameters": {
+        "github_role_arn": "arn:aws:iam::858165505743:role/capgemini-car-gha-oidc-9b8c621251d524e0"
+    },
+    "general_parameters": {
+        "account_id": "858165505743",
+        "aws_region": "eu-central-1",
+        "loglevel": "info",
+        "infrastructure_name_prefix": "EAF",
+        "vpc": {
+            "id": "create",
+            "cidr": "100.112.15.0/24",
+            "private_subnet_cidr_az1": "100.112.15.0/26",
+            "private_subnet_cidr_az2": "100.112.15.64/26",
+            "private_subnet_cidr_az3": "100.112.15.128/26",
+            "public_subnet_cidr": "100.112.15.192/28",
+            "private_subnet_cidr_az1_tier2": "100.112.15.208/28",
+            "private_subnet_cidr_az2_tier2": "100.112.15.224/28",
+            "private_subnet_cidr_az3_tier2": "100.112.15.240/28"
+        },
+        "access_to_load_balancer_sg_id": "",
+        "instances_quantity": 14,
+        "load_balancer": {
+            "tags": {
+                "environment": "prod",
+                "product": "splunk",
+                "application": "splunk",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "us",
+                "business_unit": "test1"
+            }
+        },
+        "kms_key_alias": "Splunk-KMS-Key",
+        "instance_profile": {
+            "name": "eaf-instance-ssm-us-role",
+            "role_name": "eaf-instance-ssm-us-role"
+        },
+        "provision_jumphost_sg_group": "true"
+    },
+    "common_instance_parameters": {
+        "instance_type": "t2.micro",
+        "ami_name": "CCP Hardened Amazon Linux 2*",
+        "worker_type": "unset",
+        "tags": {
+            "required": {
+                "environment": "dev",
+                "product": "splunk",
+                "application": "splunk",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "us",
+                "business_unit": "test1"
+                
+
+            }
+        },
+        "root_volume": {
+            "volume_size": "20",
+            "volume_type": "gp3",
+            "delete_on_termination": "true"
+        },
+        "data_volumes": [
+            {
+                "mount_point": "/opt/splunk",
+                "volume_size": "15",
+                "volume_type": "gp3",
+                "delete_on_termination": "true",
+                "iops": "3000",
+                "throughput": "125"
+            }
+        ]
+    },
+    "specifications_per_worker": [
+        {
+            "worker_type": "SearchHead",
+            "instance_type": "t3.xlarge"
+
+        },
+        {
+            "worker_type": "SearchHead",
+            "instance_type": "t3.xlarge"
+        },
+        {
+            "worker_type": "SearchHead",
+            "instance_type": "t3.xlarge"
+        },
+        {
+            "worker_type": "Indexer",
+            "instance_type": "t3.medium",
+            "root_volume": {
+                "volume_size": "50",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": [
+                {
+                    "mount_point": "/data",
+                    "volume_size": "30",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            ]
+        },
+        {
+            "worker_type": "Indexer",
+            "instance_type": "t3.medium",
+            "root_volume": {
+                "volume_size": "50",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": [
+                {
+                    "mount_point": "/data",
+                    "volume_size": "30",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            ]
+        },
+        {
+            "worker_type": "Indexer",
+            "instance_type": "t3.medium",
+            "root_volume": {
+                "volume_size": "50",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": [
+                {
+                    "mount_point": "/data",
+                    "volume_size": "30",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            ]
+        },
+        {
+            "worker_type": "Forwarder",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Forwarder",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Forwarder",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "LicenseServer",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Master",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Master",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "Deploy",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "DeploymentServer",
+            "instance_type": "t3.medium"
+        },
+        {
+            "worker_type": "MonitoringConsole",
+            "instance_type": "t3.medium"
+        }
+    ]
+}

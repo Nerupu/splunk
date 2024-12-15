@@ -1,0 +1,272 @@
+{
+    "aws_region": "eu-west-2",
+    "account_id": "777506782670",
+    "kms_key_id": "802a2061-912c-4b9a-a32a-9859bc1db314",
+    "rds_config": {
+        "tags": {
+            "required": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            }
+        },
+        "subnet_id": "subnet-0128d4a60d61f5bc3"
+    },
+    "instances_list": [
+        {
+            "vm_instance_type": "t2.medium",
+            "vm_ami_name": "Amazon Linux 2",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Orchestrator",
+            "vm_sg_list": [
+                "sg-000d8785c74b8e5bf"
+            ],
+            "vm_tags": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            },
+            "vm_subnet": "subnet-0128d4a60d61f5bc3",
+            "vm_name": "euwaa-eafoOrd01",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {
+                "/dev/sdf": {
+                    "mount_point": "/mnt/data1",
+                    "volume_size": "15",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                },
+                "/dev/sdg": {
+                    "mount_point": "/mnt/data2",
+                    "volume_size": "10",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            }
+        },
+        {
+            "vm_instance_type": "t2.medium",
+            "vm_ami_name": "Amazon Linux 2",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "SteppingStone",
+            "vm_sg_list": [
+                "sg-0a3d26872ae7fc1a3"
+            ],
+            "vm_tags": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            },
+            "vm_subnet": "subnet-0128d4a60d61f5bc3",
+            "vm_name": "euwaa-eafoStd01",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "t2.medium",
+            "vm_ami_name": "Amazon Linux 2",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "InfluxDatabase",
+            "vm_sg_list": [
+                "sg-07a3edf7130ea2a31"
+            ],
+            "vm_tags": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            },
+            "vm_subnet": "subnet-0128d4a60d61f5bc3",
+            "vm_name": "euwaa-eafoInd01",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "t2.medium",
+            "vm_ami_name": "Amazon Linux 2",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Collector",
+            "vm_sg_list": [
+                "sg-001fc4d2ac41a73a9"
+            ],
+            "vm_tags": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            },
+            "vm_subnet": "subnet-0128d4a60d61f5bc3",
+            "vm_name": "euwaa-eafoCod01",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "t2.medium",
+            "vm_ami_name": "Amazon Linux 2",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Orchestrator",
+            "vm_sg_list": [
+                "sg-000d8785c74b8e5bf"
+            ],
+            "vm_tags": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            },
+            "vm_subnet": "subnet-016f08ea4bb7cf1b8",
+            "vm_name": "euwaa-eafoOrd02",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {
+                "/dev/sdf": {
+                    "mount_point": "/mnt/data1",
+                    "volume_size": "15",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                },
+                "/dev/sdg": {
+                    "mount_point": "/mnt/data2",
+                    "volume_size": "10",
+                    "volume_type": "gp3",
+                    "delete_on_termination": "true",
+                    "iops": "3000",
+                    "throughput": "125"
+                }
+            }
+        },
+        {
+            "vm_instance_type": "t2.medium",
+            "vm_ami_name": "Amazon Linux 2",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "SteppingStone",
+            "vm_sg_list": [
+                "sg-0a3d26872ae7fc1a3"
+            ],
+            "vm_tags": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            },
+            "vm_subnet": "subnet-016f08ea4bb7cf1b8",
+            "vm_name": "euwaa-eafoStd02",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "t2.medium",
+            "vm_ami_name": "Amazon Linux 2",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "InfluxDatabase",
+            "vm_sg_list": [
+                "sg-07a3edf7130ea2a31"
+            ],
+            "vm_tags": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            },
+            "vm_subnet": "subnet-016f08ea4bb7cf1b8",
+            "vm_name": "euwaa-eafoInd02",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        },
+        {
+            "vm_instance_type": "t2.medium",
+            "vm_ami_name": "Amazon Linux 2",
+            "vm_instance_profile": "SSMInstanceProfile",
+            "vm_worker_type": "Collector",
+            "vm_sg_list": [
+                "sg-001fc4d2ac41a73a9"
+            ],
+            "vm_tags": {
+                "environment": "dev",
+                "product": "opsview",
+                "application": "opsview",
+                "ccp_managed": "core",
+                "compliance": "test",
+                "data_residency": "eea",
+                "instance": "uk",
+                "business_unit": "test1"
+            },
+            "vm_subnet": "subnet-016f08ea4bb7cf1b8",
+            "vm_name": "euwaa-eafoCod02",
+            "root_volume": {
+                "volume_size": "20",
+                "volume_type": "gp3",
+                "delete_on_termination": "true"
+            },
+            "data_volumes": {}
+        }
+    ]
+}

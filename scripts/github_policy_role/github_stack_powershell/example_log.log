@@ -1,0 +1,51 @@
+github_policy_role> .\create-stack.ps1
+Make sure following environment variables are set: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION
+Configuring aws cli using environment variables
+Configuration done.
+Checking caller identity
+Caller identity:
+Account ID: 255319289783
+User ID: AROATW4RXF636JJ3BZPH6:maciej.sikora
+ARN: arn:aws:sts::255319289783:assumed-role/AWSReservedSSO_AWSAdministratorAccess_de5e5a9947266d47/maciej.sikora
+Validating template
+{
+    "Parameters": [
+        {
+            "ParameterKey": "AccountId",
+            "NoEcho": false,
+            "Description": "The AWS Account ID where the IAM Role will be created"
+        },
+        {
+            "ParameterKey": "RepoName",
+            "DefaultValue": "capgemini-car/EAF-Splunk:*",
+            "NoEcho": false,
+            "Description": "The name of the GitHub repository where the IAM Role will be created"
+        },
+        {
+            "ParameterKey": "Region",
+            "NoEcho": false,
+            "Description": "The region where the IAM Role will be created"
+        }
+    ],
+    "Capabilities": [
+        "CAPABILITY_IAM"
+    ],
+    "CapabilitiesReason": "The following resource(s) require capabilities: [AWS::IAM::Role]"
+}
+
+Creating stack
+Stack name: EAF-GITHUB-ROLE-20230419-160310
+{
+    "StackId": "arn:aws:cloudformation:us-east-1:255319289783:stack/EAF-GITHUB-ROLE-20230419-160310/f218ac60-deba-11ed-8ef9-0e9c12df7055"
+}
+
+Stack status: CREATE_IN_PROGRESS
+Stack status: CREATE_IN_PROGRESS
+Stack status: CREATE_IN_PROGRESS
+Stack status: CREATE_IN_PROGRESS
+Stack status: CREATE_COMPLETE
+Stack EAF-GITHUB-ROLE-20230419-160310 has reached the desired status: CREATE_COMPLETE
+Stack EAF-GITHUB-ROLE-20230419-160310 has been successfully created.
+Stack outputs:
+
+Github Role ARN: arn:aws:iam::255319289783:role/EAF-GITHUB-ROLE-20230419-160310-GitHubTokenRole-1VVJ63NPC38LV
